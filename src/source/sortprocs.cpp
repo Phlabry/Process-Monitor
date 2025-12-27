@@ -1,30 +1,25 @@
-#include "getprocs.cpp"
+// src/source/sortprocs.cpp
+#include "../header/getprocs.h"
+#include "../header/sortprocs.h"
 #include <vector>
 #include <algorithm>
 
-enum keylist{
-    name,
-    id,
-    threads,
-    dwsize,
-    prio,
-    parentPid,
-};
+using namespace std;
 
-vector<ProcInfo> SortProcs(vector<ProcInfo> procs, keylist k, bool asc) {
+vector<ProcInfo> SortProcs(vector<ProcInfo> &procs, keylist k, bool asc) {
     auto cmp = [&](const ProcInfo& a, const ProcInfo& b) {
         switch (k) {
-            case name:
+            case 0:
                 return asc ? a.szExeFile < b.szExeFile : a.szExeFile > b.szExeFile;
-            case id:
+            case 1:
                 return asc ? a.th32ProcessID < b.th32ProcessID : a.th32ProcessID > b.th32ProcessID;
-            case threads:
+            case 2:
                 return asc ? a.cntThreads < b.cntThreads : a.cntThreads > b.cntThreads;
-            case dwsize:
+            case 3:
                 return asc ? a.dwSize < b.dwSize : a.dwSize > b.dwSize;
-            case prio:
+            case 4:
                 return asc ? a.pcPriClassBase < b.pcPriClassBase : a.pcPriClassBase > b.pcPriClassBase;
-            case parentPid:
+            case 5:
                 return asc ? a.th32ParentProcessID < b.th32ParentProcessID : a.th32ParentProcessID > b.th32ParentProcessID;
         }
         return false;

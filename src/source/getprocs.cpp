@@ -1,4 +1,5 @@
-// getprocs.cpp
+// src/source/getprocs.cpp
+#include "../header/getprocs.h"
 #include <windows.h>
 #include <tlhelp32.h>
 #include <iostream>
@@ -6,15 +7,6 @@
 #include <vector>
 
 using namespace std;
-
-struct ProcInfo {
-    wstring szExeFile;
-    DWORD th32ProcessID;
-    DWORD cntThreads;
-    DWORD dwSize;
-    LONG pcPriClassBase;
-    DWORD th32ParentProcessID;
-};
 
 HANDLE GetProcessSnap() {
     HANDLE hProcessSnap; // Snapshot of processes
@@ -27,13 +19,13 @@ HANDLE GetProcessSnap() {
     return hProcessSnap;
 }
 
-bool GetFirstProcess(HANDLE snap, PROCESSENTRY32& pe) {
+bool GetFirstProcess(HANDLE snap, PROCESSENTRY32W& pe) {
     pe.dwSize = sizeof(pe);
-    return Process32First(snap, &pe);
+    return Process32FirstW(snap, &pe);
 }
 
-bool GetNextProcess(HANDLE snap, PROCESSENTRY32& pe) {
-    return Process32Next(snap, &pe);
+bool GetNextProcess(HANDLE snap, PROCESSENTRY32W& pe) {
+    return Process32NextW(snap, &pe);
 }
 
 vector<ProcInfo> GetProcVector(HANDLE snap, PROCESSENTRY32W& pe){
@@ -56,5 +48,6 @@ vector<ProcInfo> GetProcVector(HANDLE snap, PROCESSENTRY32W& pe){
         return {};
     }
     
+    CloseHandle(snap);
     return procs;
 }
