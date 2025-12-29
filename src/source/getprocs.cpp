@@ -40,7 +40,7 @@ vector<ProcInfo> GetProcVector(HANDLE snap, PROCESSENTRY32W& pe){
             p.pcPriClassBase = pe.pcPriClassBase;
             p.th32ParentProcessID = pe.th32ParentProcessID;
 
-            procs.push_back(move(p));
+            procs.push_back(p);
         } while(GetNextProcess(snap, pe));
     } else {
         perror("GetProcVector has Failed");
@@ -48,6 +48,5 @@ vector<ProcInfo> GetProcVector(HANDLE snap, PROCESSENTRY32W& pe){
         return {};
     }
     
-    CloseHandle(snap);
     return procs;
 }

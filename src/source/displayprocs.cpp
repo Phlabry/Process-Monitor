@@ -1,6 +1,7 @@
 // src/source/displayprocs.cpp
-#include "../header/sortprocs.h"
+#include "../header/displayprocs.h"
 #include "../header/getprocs.h"
+#include "../header/sortprocs.h"
 #include <iostream>
 #include <iomanip>
 #include <windows.h>
@@ -11,7 +12,7 @@
 
 using namespace std;
 
-void DisplayProcs(keylist key = keylist::name, bool asc = false) {
+void DisplayProcs(keylist key, bool asc) {
     HANDLE snap = GetProcessSnap();
     PROCESSENTRY32W pe32;
     pe32.dwSize = sizeof(PROCESSENTRY32W);
@@ -78,6 +79,9 @@ void DisplayProcs(keylist key = keylist::name, bool asc = false) {
     out << L"Total Process Count: " << len << endl;
 
     wcout << out.str();
+
+    CloseHandle(snap);
+    return;
 }
 
 void CycleDisplay() {
@@ -86,4 +90,10 @@ void CycleDisplay() {
         DisplayProcs();
         Sleep(100000);
     }
+    return;
+}
+
+void SelectSection(){
+
+    return;
 }

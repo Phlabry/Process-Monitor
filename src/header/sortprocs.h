@@ -12,4 +12,4 @@ enum keylist{
     parentpid,
 };
 
-std::vector<ProcInfo> SortProcs(std::vector<ProcInfo> &procs, keylist k, bool asc);
+void SortProcs(std::vector<ProcInfo> &procs, keylist k, bool asc);
