@@ -7,6 +7,8 @@
 #include <sstream>
 #include <string>
 
+// maybe sorting through terminal input. make it executable through terminal and feed paramters for cycleprocs through there.
+
 using namespace std;
 
 void DisplayProcs(keylist key = keylist::name, bool asc = false) {
@@ -17,7 +19,7 @@ void DisplayProcs(keylist key = keylist::name, bool asc = false) {
     vector<ProcInfo> procs = GetProcVector(snap, pe32);
     int len = (int)procs.size();
 
-    SortProcs(procs, key, asc);
+    SortProcs(procs, key, asc); 
 
     int namew = (int)wcslen(L"PROCESS NAME");
     int idw = (int)wcslen(L"ID");
