@@ -2,17 +2,20 @@
 #include "../header/displayprocs.h"
 #include "../header/getprocs.h"
 #include "../header/sortprocs.h"
+#include "../header/keyactions.h"
 #include <iostream>
 #include <iomanip>
 #include <windows.h>
 #include <sstream>
 #include <string>
+#include <unordered_map>
+#include <functional>
 
 // maybe sorting through terminal input. make it executable through terminal and feed paramters for cycleprocs through there.
 
 using namespace std;
 
-void DisplayProcs(keylist key, bool asc) {
+void DisplayProcs(KeyList key, bool asc) {
     HANDLE snap = GetProcessSnap();
     PROCESSENTRY32W pe32;
     pe32.dwSize = sizeof(PROCESSENTRY32W);
@@ -29,12 +32,10 @@ void DisplayProcs(keylist key, bool asc) {
     int priow = (int)wcslen(L"PRIORITY");
 
     for (int i = 0; i < len; i++) {
-        // Name
         if ((int)procs[i].szExeFile.size() > namew) {
             namew = (int)procs[i].szExeFile.size();
         }
 
-        // Numbers: compare digit lengths
         int cur;
 
         cur = (int)to_wstring(procs[i].th32ProcessID).size();
@@ -84,16 +85,51 @@ void DisplayProcs(keylist key, bool asc) {
     return;
 }
 
+// ADD AN INDICATOR FOR SELECTED ROW AND ASC MARKER
+// BUFFER FOR THE OUTPUT
+// MOUSE POSITION AT START AFTER EACH REFRESH
 void CycleDisplay() {
-    while (true){
-        system("cls");
-        DisplayProcs();
-        Sleep(100000);
+    InitKeyActions();
+    UIState st;
+
+    static KeyList columns[] = {NAME, ID, THREADS, PARENTID, PRIORITY, DWSIZE};
+    const int colCount = (int)(sizeof(columns) / sizeof(columns[0]));
+
+    HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
+    if (hIn == INVALID_HANDLE_VALUE) {
+        GetLastError();
+        return;
     }
-    return;
-}
 
-void SelectSection(){
+    while (st.running) {
+        system("cls");
+        DisplayProcs(columns[st.selectedIndex], st.asc);
 
-    return;
+        DWORD numEvents = 0;
+        if (!GetNumberOfConsoleInputEvents(hIn, &numEvents)) {
+            GetLastError();
+            break;
+        }
+
+        while (numEvents > 0) {
+            INPUT_RECORD rec;
+            DWORD readCount = 0;
+
+            if (!ReadConsoleInputW(hIn, &rec, 1, &readCount)) {
+                st.running = false;
+                break;
+            }
+
+            if (readCount == 1 && rec.EventType == KEY_EVENT) {
+                const KEY_EVENT_RECORD& kev = rec.Event.KeyEvent;
+                HandleKeyEvent(kev, st, colCount);
+            }
+
+            if (!GetNumberOfConsoleInputEvents(hIn, &numEvents)) {
+                break;
+            }
+        }
+
+        Sleep(10000);
+    }
 }

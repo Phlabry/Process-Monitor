@@ -3,13 +3,13 @@
 #include "getprocs.h"
 #include <vector>
 
-enum keylist{
-    name,
-    id,
-    threads,
-    dwsize,
-    prio,
-    parentpid,
+enum KeyList{
+    NAME,
+    ID,
+    THREADS,
+    DWSIZE,
+    PRIORITY,
+    PARENTID,
 };
 
-void SortProcs(std::vector<ProcInfo> &procs, keylist k, bool asc);
+void SortProcs(std::vector<ProcInfo> &procs, KeyList k, bool asc);

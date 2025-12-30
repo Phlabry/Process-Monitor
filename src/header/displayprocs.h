@@ -3,5 +3,5 @@
 #include "../header/sortprocs.h"
 #include "../header/getprocs.h"
 
-void DisplayProcs(keylist key = keylist::name, bool asc = false);
+void DisplayProcs(KeyList key = KeyList::NAME, bool asc = false);
 void CycleDisplay();

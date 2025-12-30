@@ -5,6 +5,5 @@ using namespace std;
 
 int main() { 
     CycleDisplay();
-
     return 0;
 }
