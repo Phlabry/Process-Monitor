@@ -11,8 +11,6 @@
 #include <unordered_map>
 #include <functional>
 
-// maybe sorting through terminal input. make it executable through terminal and feed paramters for cycleprocs through there.
-
 using namespace std;
 
 void DisplayProcs(KeyList key, bool asc) {
@@ -56,6 +54,8 @@ void DisplayProcs(KeyList key, bool asc) {
 
     std::wostringstream out;
 
+    out << L"Total Process Count: " << len << endl;
+    
     // Header 
     out << left
         << setw(namew) << L"PROCESS NAME"
@@ -65,7 +65,7 @@ void DisplayProcs(KeyList key, bool asc) {
         << setw(priow) << L"PRIORITY"
         << endl;
 
-    // Rows
+        // Rows
     for (int i = 0; i < len; i++) {
         out << left
             << setw(namew) << procs[i].szExeFile
@@ -77,7 +77,6 @@ void DisplayProcs(KeyList key, bool asc) {
             << endl;
     }
 
-    out << L"Total Process Count: " << len << endl;
 
     wcout << out.str();
 
@@ -88,6 +87,41 @@ void DisplayProcs(KeyList key, bool asc) {
 // ADD AN INDICATOR FOR SELECTED ROW AND ASC MARKER
 // BUFFER FOR THE OUTPUT
 // MOUSE POSITION AT START AFTER EACH REFRESH
+// BUFFER FOR THE OUTPUT + RESTORE VIEW/CURSOR
+static void RefreshDisplay(KeyList key, bool asc) {
+    system("cls");
+    std::wostringstream capture;
+    std::wstreambuf* oldBuf = std::wcout.rdbuf(capture.rdbuf());
+    DisplayProcs(key, asc);
+    std::wcout.rdbuf(oldBuf);
+
+    std::wstring frame = capture.str();
+
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hOut == INVALID_HANDLE_VALUE) return;
+
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    if (!GetConsoleScreenBufferInfo(hOut, &csbi)) return;
+
+    COORD savedCursor = csbi.dwCursorPosition;
+    SMALL_RECT savedWindow = csbi.srWindow;
+
+    DWORD cellCount = (DWORD)csbi.dwSize.X * (DWORD)csbi.dwSize.Y;
+    DWORD written = 0;
+    COORD home = { 0, 0 };
+
+    FillConsoleOutputCharacterW(hOut, L' ', cellCount, home, &written);
+    FillConsoleOutputAttribute(hOut, csbi.wAttributes, cellCount, home, &written);
+
+    SetConsoleCursorPosition(hOut, home);
+
+    DWORD charsWritten = 0;
+    WriteConsoleW(hOut, frame.c_str(), (DWORD)frame.size(), &charsWritten, nullptr);
+
+    SetConsoleWindowInfo(hOut, TRUE, &savedWindow);
+    SetConsoleCursorPosition(hOut, savedCursor);
+}
+
 void CycleDisplay() {
     InitKeyActions();
     UIState st;
@@ -102,9 +136,6 @@ void CycleDisplay() {
     }
 
     while (st.running) {
-        system("cls");
-        DisplayProcs(columns[st.selectedIndex], st.asc);
-
         DWORD numEvents = 0;
         if (!GetNumberOfConsoleInputEvents(hIn, &numEvents)) {
             GetLastError();
@@ -123,6 +154,7 @@ void CycleDisplay() {
             if (readCount == 1 && rec.EventType == KEY_EVENT) {
                 const KEY_EVENT_RECORD& kev = rec.Event.KeyEvent;
                 HandleKeyEvent(kev, st, colCount);
+                RefreshDisplay(columns[st.selectedIndex], st.asc);
             }
 
             if (!GetNumberOfConsoleInputEvents(hIn, &numEvents)) {
@@ -131,5 +163,6 @@ void CycleDisplay() {
         }
 
         Sleep(10000);
+        RefreshDisplay(columns[st.selectedIndex], st.asc);
     }
 }
