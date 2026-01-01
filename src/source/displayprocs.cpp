@@ -89,7 +89,6 @@ void DisplayProcs(KeyList key, bool asc) {
 // MOUSE POSITION AT START AFTER EACH REFRESH
 // BUFFER FOR THE OUTPUT + RESTORE VIEW/CURSOR
 static void RefreshDisplay(KeyList key, bool asc) {
-    system("cls");
     std::wostringstream capture;
     std::wstreambuf* oldBuf = std::wcout.rdbuf(capture.rdbuf());
     DisplayProcs(key, asc);
@@ -103,20 +102,43 @@ static void RefreshDisplay(KeyList key, bool asc) {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     if (!GetConsoleScreenBufferInfo(hOut, &csbi)) return;
 
-    COORD savedCursor = csbi.dwCursorPosition;
-    SMALL_RECT savedWindow = csbi.srWindow;
+    const COORD savedCursor = csbi.dwCursorPosition;
+    const SMALL_RECT savedWindow = csbi.srWindow;
 
     DWORD cellCount = (DWORD)csbi.dwSize.X * (DWORD)csbi.dwSize.Y;
     DWORD written = 0;
-    COORD home = { 0, 0 };
+    COORD origin = { 0, 0 };
+    FillConsoleOutputCharacterW(hOut, L' ', cellCount, origin, &written);
+    FillConsoleOutputAttribute(hOut, csbi.wAttributes, cellCount, origin, &written);
 
-    FillConsoleOutputCharacterW(hOut, L' ', cellCount, home, &written);
-    FillConsoleOutputAttribute(hOut, csbi.wAttributes, cellCount, home, &written);
+    SHORT row = savedWindow.Top;
+    SHORT col = 0;
 
-    SetConsoleCursorPosition(hOut, home);
+    const SHORT bufW = csbi.dwSize.X;
+    const SHORT bufH = csbi.dwSize.Y;
 
-    DWORD charsWritten = 0;
-    WriteConsoleW(hOut, frame.c_str(), (DWORD)frame.size(), &charsWritten, nullptr);
+    size_t i = 0;
+    while (i < frame.size() && row < bufH) {
+        size_t lineEnd = frame.find(L'\n', i);
+        if (lineEnd == std::wstring::npos) lineEnd = frame.size();
+
+        std::wstring line = frame.substr(i, lineEnd - i);
+        if ((SHORT)line.size() > bufW) line.resize(bufW);
+
+        DWORD charsWritten = 0;
+        COORD pos = { col, row };
+        WriteConsoleOutputCharacterW(hOut, line.c_str(), (DWORD)line.size(), pos, &charsWritten);
+
+        if ((SHORT)line.size() < bufW) {
+            DWORD restWritten = 0;
+            COORD restPos = { (SHORT)line.size(), row };
+            FillConsoleOutputCharacterW(hOut, L' ', (DWORD)(bufW - (SHORT)line.size()), restPos, &restWritten);
+            FillConsoleOutputAttribute(hOut, csbi.wAttributes, (DWORD)(bufW - (SHORT)line.size()), restPos, &restWritten);
+        }
+
+        row++;
+        i = (lineEnd < frame.size()) ? (lineEnd + 1) : lineEnd;
+    }
 
     SetConsoleWindowInfo(hOut, TRUE, &savedWindow);
     SetConsoleCursorPosition(hOut, savedCursor);
@@ -125,44 +147,44 @@ static void RefreshDisplay(KeyList key, bool asc) {
 void CycleDisplay() {
     InitKeyActions();
     UIState st;
-
+    
     static KeyList columns[] = {NAME, ID, THREADS, PARENTID, PRIORITY, DWSIZE};
     const int colCount = (int)(sizeof(columns) / sizeof(columns[0]));
-
+    RefreshDisplay(columns[st.selectedIndex], st.asc);
+    
     HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
     if (hIn == INVALID_HANDLE_VALUE) {
         GetLastError();
         return;
     }
-
+    
     while (st.running) {
         DWORD numEvents = 0;
         if (!GetNumberOfConsoleInputEvents(hIn, &numEvents)) {
             GetLastError();
             break;
         }
-
+        
         while (numEvents > 0) {
             INPUT_RECORD rec;
             DWORD readCount = 0;
-
+            
             if (!ReadConsoleInputW(hIn, &rec, 1, &readCount)) {
                 st.running = false;
                 break;
             }
-
+            
             if (readCount == 1 && rec.EventType == KEY_EVENT) {
                 const KEY_EVENT_RECORD& kev = rec.Event.KeyEvent;
                 HandleKeyEvent(kev, st, colCount);
                 RefreshDisplay(columns[st.selectedIndex], st.asc);
             }
-
+            
             if (!GetNumberOfConsoleInputEvents(hIn, &numEvents)) {
                 break;
             }
         }
-
-        Sleep(10000);
-        RefreshDisplay(columns[st.selectedIndex], st.asc);
+        
+        Sleep(1000);
     }
 }
