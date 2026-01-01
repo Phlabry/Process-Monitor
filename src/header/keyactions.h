@@ -1,7 +1,6 @@
-// keyactions.h
 #pragma once
-#include <windows.h>   
-#include "sortprocs.h" 
+#include "sortprocs.h"
+#include <windows.h>
 
 struct UIState {
     int selectedIndex = 0;

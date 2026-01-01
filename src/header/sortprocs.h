@@ -1,4 +1,3 @@
-// src/header/sortprocs.h
 #pragma once
 #include "getprocs.h"
 #include <vector>

@@ -1,4 +1,3 @@
-// src/source/displayprocs.cpp
 #include "../header/displayprocs.h"
 #include "../header/getprocs.h"
 #include "../header/sortprocs.h"
@@ -55,20 +54,20 @@ void DisplayProcs(KeyList key, bool asc) {
     int priow = headers[4].size();
 
     for (int i = 0; i < len; i++) {
-        if ((int)procs[i].szExeFile.size() > namew) namew = (int)procs[i].szExeFile.size();
+        if (procs[i].szExeFile.size() > namew) namew = procs[i].szExeFile.size();
 
         int cur = 0;
 
-        cur = (int)std::to_wstring(procs[i].th32ProcessID).size();
+        cur = std::to_wstring(procs[i].th32ProcessID).size();
         if (cur > idw) idw = cur;
 
-        cur = (int)std::to_wstring(procs[i].cntThreads).size();
+        cur = std::to_wstring(procs[i].cntThreads).size();
         if (cur > threadsw) threadsw = cur;
 
-        cur = (int)std::to_wstring(procs[i].th32ParentProcessID).size();
+        cur = std::to_wstring(procs[i].th32ParentProcessID).size();
         if (cur > parentw) parentw = cur;
 
-        cur = (int)std::to_wstring(procs[i].pcPriClassBase).size();
+        cur = std::to_wstring(procs[i].pcPriClassBase).size();
         if (cur > priow) priow = cur;
     }
 
@@ -79,7 +78,6 @@ void DisplayProcs(KeyList key, bool asc) {
 
     out << L"Total Process Count: " << len << L"\n";
 
-    // Header
     out << std::left
         << std::setw(namew) << headers[0]
         << std::setw(idw) << headers[1]
@@ -88,7 +86,6 @@ void DisplayProcs(KeyList key, bool asc) {
         << std::setw(priow) << headers[4]
         << L"\n";
 
-    // Rows
     for (int i = 0; i < len; i++) {
         out << std::left
             << std::setw(namew) << procs[i].szExeFile
@@ -105,8 +102,6 @@ void DisplayProcs(KeyList key, bool asc) {
     CloseHandle(snap);
 }
 
-
-// ADD AN INDICATOR FOR SELECTED ROW AND ASC MARKER
 static void RefreshDisplay(KeyList key, bool asc) {
     std::wostringstream capture;
     std::wstreambuf* oldBuf = std::wcout.rdbuf(capture.rdbuf());
@@ -168,7 +163,7 @@ void CycleDisplay() {
     UIState st;
     
     static KeyList columns[] = {NAME, ID, THREADS, PARENTID, PRIORITY, DWSIZE};
-    const int colCount = (int)(sizeof(columns) / sizeof(columns[0]));
+    const int colCount = (sizeof(columns) / sizeof(columns[0]));
     RefreshDisplay(columns[st.selectedIndex], st.asc);
     
     HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);

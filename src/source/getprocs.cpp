@@ -1,4 +1,3 @@
-// src/source/getprocs.cpp
 #include "../header/getprocs.h"
 #include <windows.h>
 #include <tlhelp32.h>
@@ -9,7 +8,7 @@
 using namespace std;
 
 HANDLE GetProcessSnap() {
-    HANDLE hProcessSnap; // Snapshot of processes
+    HANDLE hProcessSnap;
     hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if(hProcessSnap == INVALID_HANDLE_VALUE){
         perror("Failed to take a snapshot");

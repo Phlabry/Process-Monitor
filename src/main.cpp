@@ -1,4 +1,3 @@
-// src/main.cpp
 #include "./header/displayprocs.h"
 
 using namespace std;

@@ -1,4 +1,3 @@
-// src/source/sortprocs.cpp
 #include "../header/getprocs.h"
 #include "../header/sortprocs.h"
 #include <vector>
