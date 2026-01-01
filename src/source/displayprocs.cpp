@@ -44,7 +44,7 @@ void DisplayProcs(KeyList key, bool asc) {
         headers[i] = baseHeaders[i];
 
         if (headerKeys[i] == key) {
-            headers[i] = L">" + headers[i] + (asc ? L" ↑<" : L" ↓<");
+            headers[i] = L"> " + headers[i] + (asc ? L" <↑" : L" <↓");
         }
     }
 
