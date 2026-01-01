@@ -18,34 +18,57 @@ void DisplayProcs(KeyList key, bool asc) {
     PROCESSENTRY32W pe32;
     pe32.dwSize = sizeof(PROCESSENTRY32W);
 
-    vector<ProcInfo> procs = GetProcVector(snap, pe32);
-    int len = (int)procs.size();
+    std::vector<ProcInfo> procs = GetProcVector(snap, pe32);
+    int len = procs.size();
 
-    SortProcs(procs, key, asc); 
+    SortProcs(procs, key, asc);
 
-    int namew = (int)wcslen(L"PROCESS NAME");
-    int idw = (int)wcslen(L"ID");
-    int threadsw = (int)wcslen(L"THREADS");
-    int parentw = (int)wcslen(L"PARENT ID");
-    int priow = (int)wcslen(L"PRIORITY");
+    const wchar_t* baseHeaders[5] = {
+        L"PROCESS NAME",
+        L"ID",
+        L"THREADS",
+        L"PARENT ID",
+        L"PRIORITY"
+    };
+
+    const KeyList headerKeys[5] = {
+        NAME,
+        ID,
+        THREADS,
+        PARENTID,
+        PRIORITY
+    };
+
+    std::wstring headers[5];
+    for (int i = 0; i < 5; i++) {
+        headers[i] = baseHeaders[i];
+
+        if (headerKeys[i] == key) {
+            headers[i] = L">" + headers[i] + (asc ? L" ↑<" : L" ↓<");
+        }
+    }
+
+    int namew = headers[0].size();
+    int idw = headers[1].size();
+    int threadsw = headers[2].size();
+    int parentw = headers[3].size();
+    int priow = headers[4].size();
 
     for (int i = 0; i < len; i++) {
-        if ((int)procs[i].szExeFile.size() > namew) {
-            namew = (int)procs[i].szExeFile.size();
-        }
+        if ((int)procs[i].szExeFile.size() > namew) namew = (int)procs[i].szExeFile.size();
 
-        int cur;
+        int cur = 0;
 
-        cur = (int)to_wstring(procs[i].th32ProcessID).size();
+        cur = (int)std::to_wstring(procs[i].th32ProcessID).size();
         if (cur > idw) idw = cur;
 
-        cur = (int)to_wstring(procs[i].cntThreads).size();
+        cur = (int)std::to_wstring(procs[i].cntThreads).size();
         if (cur > threadsw) threadsw = cur;
 
-        cur = (int)to_wstring(procs[i].th32ParentProcessID).size();
+        cur = (int)std::to_wstring(procs[i].th32ParentProcessID).size();
         if (cur > parentw) parentw = cur;
 
-        cur = (int)to_wstring(procs[i].pcPriClassBase).size();
+        cur = (int)std::to_wstring(procs[i].pcPriClassBase).size();
         if (cur > priow) priow = cur;
     }
 
@@ -54,40 +77,36 @@ void DisplayProcs(KeyList key, bool asc) {
 
     std::wostringstream out;
 
-    out << L"Total Process Count: " << len << endl;
-    
-    // Header 
-    out << left
-        << setw(namew) << L"PROCESS NAME"
-        << setw(idw) << L"ID"
-        << setw(threadsw)<< L"THREADS"
-        << setw(parentw) << L"PARENT ID"
-        << setw(priow) << L"PRIORITY"
-        << endl;
+    out << L"Total Process Count: " << len << L"\n";
 
-        // Rows
+    // Header
+    out << std::left
+        << std::setw(namew) << headers[0]
+        << std::setw(idw) << headers[1]
+        << std::setw(threadsw) << headers[2]
+        << std::setw(parentw) << headers[3]
+        << std::setw(priow) << headers[4]
+        << L"\n";
+
+    // Rows
     for (int i = 0; i < len; i++) {
-        out << left
-            << setw(namew) << procs[i].szExeFile
-            << right
-            << setw(idw) << procs[i].th32ProcessID
-            << setw(threadsw) << procs[i].cntThreads
-            << setw(parentw) << procs[i].th32ParentProcessID
-            << setw(priow) << procs[i].pcPriClassBase
-            << endl;
+        out << std::left
+            << std::setw(namew) << procs[i].szExeFile
+            << std::right
+            << std::setw(idw) << procs[i].th32ProcessID
+            << std::setw(threadsw) << procs[i].cntThreads
+            << std::setw(parentw) << procs[i].th32ParentProcessID
+            << std::setw(priow) << procs[i].pcPriClassBase
+            << L"\n";
     }
 
-
-    wcout << out.str();
+    std::wcout << out.str();
 
     CloseHandle(snap);
-    return;
 }
 
+
 // ADD AN INDICATOR FOR SELECTED ROW AND ASC MARKER
-// BUFFER FOR THE OUTPUT
-// MOUSE POSITION AT START AFTER EACH REFRESH
-// BUFFER FOR THE OUTPUT + RESTORE VIEW/CURSOR
 static void RefreshDisplay(KeyList key, bool asc) {
     std::wostringstream capture;
     std::wstreambuf* oldBuf = std::wcout.rdbuf(capture.rdbuf());
